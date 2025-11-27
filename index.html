@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMGT Projects – Basis PWA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div>
+        <h1>CMGT Projects</h1>
+        <p class="subtitle">Basisversie zonder service worker</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section id="status" class="status-bar">
+      <span id="status-indicator" class="status-indicator"></span>
+      <span id="status-text">Status: controleren...</span>
+    </section>
+
+    <section id="projects-section" class="section">
+      <h2>Projecten</h2>
+      <div id="projects" class="projects-list">
+        <p id="projects-loading">Projecten worden geladen...</p>
+      </div>
+    </section>
+
+    <section id="error-section" class="section hidden">
+      <h2>Fout bij laden</h2>
+      <p id="error-message"></p>
+    </section>
+  </main>
+
+  <!-- Belangrijk: nog GEEN service worker registratie in deze fase -->
+  <script src="main.js"></script>
+</body>
+</html>
