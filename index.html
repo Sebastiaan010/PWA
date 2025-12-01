@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CMGT Projects – Basis PWA</title>
+  <title>CMGT Projects – Progressive Web App</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <div class="app-header-inner">
       <div>
         <h1>CMGT Projects</h1>
-        <p class="subtitle">Basisversie zonder service worker</p>
+        <p class="subtitle">Progressive web app met offline ondersteuning</p>
       </div>
     </div>
   </header>
@@ -20,6 +20,13 @@
     <section id="status" class="status-bar">
       <span id="status-indicator" class="status-indicator"></span>
       <span id="status-text">Status: controleren...</span>
+    </section>
+
+    <section id="tags-section" class="section">
+      <h2>Tags</h2>
+      <div id="tags-container" class="tags-list">
+        <p id="tags-loading">Tags worden geladen...</p>
+      </div>
     </section>
 
     <section id="projects-section" class="section">
@@ -35,7 +42,6 @@
     </section>
   </main>
 
-  <!-- Belangrijk: nog GEEN service worker registratie in deze fase -->
   <script src="main.js"></script>
 </body>
 </html>

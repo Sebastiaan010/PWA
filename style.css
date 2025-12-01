@@ -146,3 +146,27 @@ body {
 .hidden {
   display: none;
 }
+
+
+/* Tags */
+
+.tags-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-pill {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: #e8f0fe;
+  color: #1a73e8;
+  font-size: 0.85rem;
+  border: 1px solid #d2e3fc;
+}
+
+.tags-message {
+  font-size: 0.9rem;
+  color: #555;
+}

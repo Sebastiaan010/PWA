@@ -1,17 +1,80 @@
-// Versie van je cache - verander dit als je de App Shell wijzigt
+importScripts("/localforage.min.js");
+
+// --------------------
+// Config
+// --------------------
 const CACHE_VERSION = "app-shell-v1";
 const APP_SHELL_CACHE = `cmgt-app-shell-${CACHE_VERSION}`;
 
-// Bestanden die tot je App Shell behoren:
 const APP_SHELL_FILES = [
-  "/",            // root (werkt meestal op localhost)
+  "/",
   "/index.html",
   "/style.css",
   "/main.js"
-  // Later kunnen we hier icons, manifest, etc. aan toevoegen
 ];
 
-// INSTALL - cache de App Shell
+const REMOTE_API_BASE = "https://cmgt.hr.nl/api";
+
+// localForage configureren voor projecten
+localforage.config({
+  name: "cmgt-pwa",
+  storeName: "projects-store" // elk project in aparte rij
+});
+
+// --------------------
+// Helpers voor IndexedDB
+// --------------------
+function storeProjectsFromApiData(apiData) {
+  if (!apiData || !Array.isArray(apiData.data)) {
+    return Promise.resolve();
+  }
+
+  const ops = apiData.data.map(function (item) {
+    const project = item.project;
+    if (!project || !project.slug) {
+      return Promise.resolve();
+    }
+    const key = "project-" + project.slug;
+    return localforage.setItem(key, project);
+  });
+
+  return Promise.all(ops);
+}
+
+function buildProjectsResponseFromIndexedDB() {
+  return localforage.keys().then(function (keys) {
+    const projectKeys = keys.filter(function (key) {
+      return key.startsWith("project-");
+    });
+
+    if (projectKeys.length === 0) {
+      const empty = { data: [] };
+      return new Response(JSON.stringify(empty), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    return Promise.all(
+      projectKeys.map(function (key) {
+        return localforage.getItem(key);
+      })
+    ).then(function (projects) {
+      const payload = {
+        data: projects.map(function (project) {
+          return { project: project };
+        })
+      };
+
+      return new Response(JSON.stringify(payload), {
+        headers: { "Content-Type": "application/json" }
+      });
+    });
+  });
+}
+
+// --------------------
+// INSTALL - App Shell cachen
+// --------------------
 self.addEventListener("install", function (event) {
   console.log("[ServiceWorker] Install");
 
@@ -22,11 +85,12 @@ self.addEventListener("install", function (event) {
     })
   );
 
-  // Nieuwe SW meteen activeren
   self.skipWaiting();
 });
 
+// --------------------
 // ACTIVATE - oude caches opruimen
+// --------------------
 self.addEventListener("activate", function (event) {
   console.log("[ServiceWorker] Activate");
 
@@ -46,25 +110,25 @@ self.addEventListener("activate", function (event) {
   self.clients.claim();
 });
 
-// FETCH - strategie: CacheFirstThenNetwork voor de App Shell
+// --------------------
+// FETCH
+// --------------------
 self.addEventListener("fetch", function (event) {
   const request = event.request;
   const url = new URL(request.url);
 
-  // We behandelen alleen GET requests
   if (request.method !== "GET") {
     return;
   }
 
-  // App Shell bestanden -> CacheFirstThenNetwork
+  // 1) App Shell -> CacheFirstThenNetwork
   if (APP_SHELL_FILES.includes(url.pathname) || url.pathname === "/") {
     event.respondWith(
       caches.match(request).then(function (cachedResponse) {
         if (cachedResponse) {
-          // Uit cache
           return cachedResponse;
         }
-        // Niet in cache -> via netwerk ophalen en eventueel bijcachen
+
         return fetch(request).then(function (networkResponse) {
           return caches.open(APP_SHELL_CACHE).then(function (cache) {
             cache.put(request, networkResponse.clone());
@@ -76,6 +140,52 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Voor nu: alles wat niet App Shell is gewoon doorlaten naar het netwerk
-  // (API-calls naar /projects, /tags etc worden later met strategieën afgehandeld)
+  // 2) Tags -> Network Only met offline fallback-JSON
+  if (url.pathname.startsWith("/api/tags")) {
+    event.respondWith(
+      fetch(REMOTE_API_BASE + "/tags" + url.search).catch(function () {
+        console.log(
+          "[ServiceWorker] NetworkOnly: tags kunnen niet worden geladen (offline)"
+        );
+        const payload = {
+          offline: true,
+          message: "Tags kunnen niet geladen worden omdat je offline bent."
+        };
+        return new Response(JSON.stringify(payload), {
+          headers: { "Content-Type": "application/json" }
+        });
+      })
+    );
+    return;
+  }
+
+  // 3) Project data -> NetworkFirstThenCache via proxy naar REMOTE_API_BASE
+  if (url.pathname.startsWith("/api/projects")) {
+    event.respondWith(
+      fetch(REMOTE_API_BASE + "/projects" + url.search)
+        .then(function (networkResponse) {
+          const clone = networkResponse.clone();
+
+          clone
+            .json()
+            .then(function (data) {
+              return storeProjectsFromApiData(data);
+            })
+            .catch(function (err) {
+              console.warn("[ServiceWorker] Kon projectdata niet parsen:", err);
+            });
+
+          return networkResponse;
+        })
+        .catch(function () {
+          console.log(
+            "[ServiceWorker] NetworkFirst: netwerk faalt, haal projecten uit IndexedDB"
+          );
+          return buildProjectsResponseFromIndexedDB();
+        })
+    );
+    return;
+  }
+
+  // 4) Alles anders gewoon door naar netwerk
 });

@@ -1,9 +1,9 @@
-// Basis URL van de CMGT API
-const API_BASE = "https://cmgt.hr.nl/api";
+// Basis URL van onze eigen "proxy" API.
+// De service worker vertaalt dit naar de echte CMGT API.
+const API_BASE = "/api";
 
 /**
  * Update de zichtbare online/offline status in de UI.
- * Dit is puur visueel; de echte offline strategieën komen later in de service worker.
  */
 function updateOnlineStatus() {
   const indicator = document.getElementById("status-indicator");
@@ -24,8 +24,7 @@ function updateOnlineStatus() {
 }
 
 /**
- * Haalt de lijst met projecten op uit de API en geeft die door om te renderen.
- * Nog GEEN caching, GEEN IndexedDB, alleen netwerk.
+ * Haalt de lijst met projecten op uit de API.
  */
 function fetchProjects() {
   const loadingEl = document.getElementById("projects-loading");
@@ -69,8 +68,6 @@ function fetchProjects() {
 
 /**
  * Rendeert de projecten in de HTML.
- * Verwacht een object met een `data` array,
- * waarbij elk item een `project` property heeft.
  */
 function renderProjects(apiData) {
   const container = document.getElementById("projects");
@@ -110,10 +107,9 @@ function renderProjects(apiData) {
       card.appendChild(author);
     }
 
-    // Link naar de projectdetails in de API (of later je eigen detailpagina)
     if (project.slug) {
       const link = document.createElement("a");
-      link.href = `${API_BASE}/projects/${project.slug}`;
+      link.href = `https://cmgt.hr.nl/api/projects/${project.slug}`;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.className = "project-link";
@@ -125,17 +121,108 @@ function renderProjects(apiData) {
   });
 }
 
+/**
+ * Haalt de lijst met tags op uit de API.
+ * De service worker zorgt voor:
+ * - Network Only bij online
+ * - Een offline JSON als het netwerk faalt
+ */
+function fetchTags() {
+  const loadingEl = document.getElementById("tags-loading");
+  const container = document.getElementById("tags-container");
+
+  if (!container) return;
+
+  if (loadingEl) {
+    loadingEl.textContent = "Tags worden geladen...";
+  }
+
+  fetch(`${API_BASE}/tags`)
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error("Netwerkantwoord was niet ok: " + response.status);
+      }
+      return response.json();
+    })
+    .then(function (data) {
+      if (loadingEl) {
+        loadingEl.remove();
+      }
+      renderTags(data);
+    })
+    .catch(function (error) {
+      console.error("Fout bij ophalen tags:", error);
+      if (loadingEl) {
+        loadingEl.textContent =
+          "Er ging iets mis bij het ophalen van de tags.";
+      }
+    });
+}
+
+/**
+ * Rendeert de tags of een offline-bericht in de HTML.
+ * Als de service worker een speciale offline payload terugstuurt, tonen we een melding.
+ */
+function renderTags(data) {
+  const container = document.getElementById("tags-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  // Service worker kan een offline payload sturen, bijv. { offline: true, message: "..." }
+  if (data && data.offline) {
+    const msg = document.createElement("p");
+    msg.className = "tags-message";
+    msg.textContent = data.message || "Tags zijn niet beschikbaar (offline).";
+    container.appendChild(msg);
+    return;
+  }
+
+  let items = [];
+
+  if (Array.isArray(data?.data)) {
+    items = data.data;
+  } else if (Array.isArray(data?.tags)) {
+    items = data.tags;
+  } else if (Array.isArray(data)) {
+    items = data;
+  }
+
+  if (!items.length) {
+    const p = document.createElement("p");
+    p.className = "tags-message";
+    p.textContent = "Geen tags gevonden.";
+    container.appendChild(p);
+    return;
+  }
+
+  items.forEach(function (item) {
+    const tagObj = item.tag || item;
+    const label =
+      tagObj.title ||
+      tagObj.name ||
+      tagObj.label ||
+      tagObj.slug ||
+      String(tagObj);
+
+    const span = document.createElement("span");
+    span.className = "tag-pill";
+    span.textContent = label;
+    container.appendChild(span);
+  });
+}
+
 // Init zodra de DOM klaar is
 document.addEventListener("DOMContentLoaded", function () {
   updateOnlineStatus();
   fetchProjects();
+  fetchTags();
 
-  // Alleen UI-status bijwerken; offline logica zelf komt later in de service worker.
   window.addEventListener("online", updateOnlineStatus);
   window.addEventListener("offline", updateOnlineStatus);
 });
 
-// Service worker registratie - alleen als de browser het ondersteunt
+// Service worker registratie
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
     navigator.serviceWorker
@@ -148,4 +235,3 @@ if ("serviceWorker" in navigator) {
       });
   });
 }
-
