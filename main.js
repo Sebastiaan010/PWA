@@ -1,4 +1,3 @@
-// Basis URL van onze eigen "proxy" API.
 // De service worker vertaalt dit naar de echte CMGT API.
 const API_BASE = "/api";
 
@@ -66,9 +65,7 @@ function fetchProjects() {
     });
 }
 
-/**
- * Rendeert de projecten in de HTML.
- */
+/* stopt de projecten in de HTML */
 function renderProjects(apiData) {
   const container = document.getElementById("projects");
   if (!container) return;
@@ -180,7 +177,7 @@ function renderTags(data) {
 
   let items = [];
 
-  if (Array.isArray(data?.data)) {
+  if (Array.isArray(data?.data)) {  
     items = data.data;
   } else if (Array.isArray(data?.tags)) {
     items = data.tags;

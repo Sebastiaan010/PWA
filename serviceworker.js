@@ -1,8 +1,6 @@
 importScripts("/localforage.min.js");
 
-// --------------------
 // Config
-// --------------------
 const CACHE_VERSION = "app-shell-v1";
 const APP_SHELL_CACHE = `cmgt-app-shell-${CACHE_VERSION}`;
 
@@ -21,9 +19,7 @@ localforage.config({
   storeName: "projects-store" // elk project in aparte rij
 });
 
-// --------------------
 // Helpers voor IndexedDB
-// --------------------
 function storeProjectsFromApiData(apiData) {
   if (!apiData || !Array.isArray(apiData.data)) {
     return Promise.resolve();
@@ -72,9 +68,7 @@ function buildProjectsResponseFromIndexedDB() {
   });
 }
 
-// --------------------
 // INSTALL - App Shell cachen
-// --------------------
 self.addEventListener("install", function (event) {
   console.log("[ServiceWorker] Install");
 
@@ -88,9 +82,7 @@ self.addEventListener("install", function (event) {
   self.skipWaiting();
 });
 
-// --------------------
 // ACTIVATE - oude caches opruimen
-// --------------------
 self.addEventListener("activate", function (event) {
   console.log("[ServiceWorker] Activate");
 
@@ -110,9 +102,7 @@ self.addEventListener("activate", function (event) {
   self.clients.claim();
 });
 
-// --------------------
 // FETCH
-// --------------------
 self.addEventListener("fetch", function (event) {
   const request = event.request;
   const url = new URL(request.url);
@@ -121,7 +111,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // 1) App Shell -> CacheFirstThenNetwork
+  // Op de shell is Cache first strategie gebruikt.
   if (APP_SHELL_FILES.includes(url.pathname) || url.pathname === "/") {
     event.respondWith(
       caches.match(request).then(function (cachedResponse) {
@@ -159,7 +149,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // 3) Project data -> NetworkFirstThenCache via proxy naar REMOTE_API_BASE
+  // Net work first strategie toegepast, deze laad eerst via het internet daarna uit de IndexedDB/
   if (url.pathname.startsWith("/api/projects")) {
     event.respondWith(
       fetch(REMOTE_API_BASE + "/projects" + url.search)
