@@ -121,8 +121,8 @@ function renderProjects(apiData) {
 /**
  * Haalt de lijst met tags op uit de API.
  * De service worker zorgt voor:
- * - Network Only bij online
- * - Een offline JSON als het netwerk faalt
+ * Network Only bij online
+ * Een offline JSON als het netwerk faalt
  */
 function fetchTags() {
   const loadingEl = document.getElementById("tags-loading");
