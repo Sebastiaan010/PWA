@@ -18,7 +18,8 @@ function updateOnlineStatus() {
   if (online) {
     text.textContent = "Status: online – data kan worden opgehaald.";
   } else {
-    text.textContent = "Status: offline – nieuwe data kan nu niet worden opgehaald.";
+    text.textContent =
+      "Status: offline – nieuwe data kan nu niet worden opgehaald.";
   }
 }
 
@@ -84,6 +85,20 @@ function renderProjects(apiData) {
     const card = document.createElement("article");
     card.className = "project-card";
 
+    // Optioneel: projectafbeelding tonen als deze in de API aanwezig is
+    const imageUrl =
+      project.header_image ||
+      (project.screenshots && project.screenshots[0]) ||
+      null;
+
+    if (imageUrl) {
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      img.alt = project.title || "Projectafbeelding";
+      img.className = "project-image";
+      card.appendChild(img);
+    }
+
     const title = document.createElement("h3");
     title.textContent = project.title || "Naamloos project";
     card.appendChild(title);
@@ -145,8 +160,7 @@ function fetchTags() {
     .catch(function (error) {
       console.error("Fout bij ophalen tags:", error);
       if (loadingEl) {
-        loadingEl.textContent =
-          "Er ging iets mis bij het ophalen van de tags.";
+        loadingEl.textContent = "Er ging iets mis bij het ophalen van de tags.";
       }
     });
 }
@@ -170,7 +184,7 @@ function renderTags(data) {
 
   let items = [];
 
-  if (Array.isArray(data?.data)) {  
+  if (Array.isArray(data?.data)) {
     items = data.data;
   } else if (Array.isArray(data?.tags)) {
     items = data.tags;
@@ -218,7 +232,10 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/serviceworker.js")
       .then(function (registration) {
-        console.log("ServiceWorker geregistreerd met scope:", registration.scope);
+        console.log(
+          "ServiceWorker geregistreerd met scope:",
+          registration.scope
+        );
       })
       .catch(function (error) {
         console.error("ServiceWorker registratie mislukt:", error);
