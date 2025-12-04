@@ -19,8 +19,8 @@ localforage.config({
   storeName: "projects-store" // elk project in aparte rij
 });
 
-// Helpers voor IndexedDB
-function storeProjectsFromApiData(apiData) {
+// Slaat de data op in de IndexedDB
+function storeProjectsFromApiData(apiData) { 
   if (!apiData || !Array.isArray(apiData.data)) {
     return Promise.resolve();
   }
@@ -37,7 +37,7 @@ function storeProjectsFromApiData(apiData) {
   return Promise.all(ops);
 }
 
-function buildProjectsResponseFromIndexedDB() { // Deze function haalt de data op uit de IndexedDB, gebeurt alleen wanneer je "offline" bent, anders gwn via de API over 
+function buildProjectsResponseFromIndexedDB() { // Deze function haalt de data op uit de IndexedDB, word alleen geroepen wanneer je "offline" bent, anders gwn via de API over 
 // het netwerk, namelijk network first.
   return localforage.keys().then(function (keys) {
     const projectKeys = keys.filter(function (key) {
