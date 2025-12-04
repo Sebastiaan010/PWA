@@ -85,7 +85,6 @@ function renderProjects(apiData) {
     const card = document.createElement("article");
     card.className = "project-card";
 
-    // Optioneel: projectafbeelding tonen als deze in de API aanwezig is
     const imageUrl =
       project.header_image ||
       (project.screenshots && project.screenshots[0]) ||
