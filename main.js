@@ -172,7 +172,9 @@ function renderTags(data) {
 
   container.innerHTML = "";
 
-  // Service worker kan een offline payload sturen, bijv. { offline: true, message: "..." }
+  // Als de service worker aangeeft dat we offline zijn bij het ophalen van tags,tonen we een offline-melding in plaats van de tag-lijst. 
+  // main.js bepaalt dus niet zelf of we offline zijn; dat doet de service worker.
+  
   if (data && data.offline) {
     const msg = document.createElement("p");
     msg.className = "tags-message";
