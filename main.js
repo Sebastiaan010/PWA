@@ -215,7 +215,6 @@ function renderTags(data) {
   });
 }
 
-// Init zodra de DOM klaar is
 document.addEventListener("DOMContentLoaded", function () {
   updateOnlineStatus();
   fetchProjects();

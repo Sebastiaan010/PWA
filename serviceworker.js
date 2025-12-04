@@ -131,7 +131,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // 2) Network Only strategie toegepast, Bij offline geeft gwn foutmelding.
+  // Network Only strategie toegepast, Bij offline geeft gwn foutmelding.
   if (url.pathname.startsWith("/api/tags")) {
     event.respondWith(
       fetch(REMOTE_API_BASE + "/tags" + url.search).catch(function () {
