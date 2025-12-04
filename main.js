@@ -22,9 +22,7 @@ function updateOnlineStatus() {
   }
 }
 
-/**
- * Haalt de lijst met projecten op uit de API.
- */
+/* Haalt de lijst met projecten op uit de API. */
 function fetchProjects() {
   const loadingEl = document.getElementById("projects-loading");
   const errorSection = document.getElementById("error-section");
@@ -119,10 +117,7 @@ function renderProjects(apiData) {
 }
 
 /**
- * Haalt de lijst met tags op uit de API.
- * De service worker zorgt voor:
- * Network Only bij online
- * Een offline JSON als het netwerk faalt
+ * Haalt de lijst met tags op uit de API. De service worker zorgt voor ; Network Only bij online, een offline JSON als het netwerk faalt
  */
 function fetchTags() {
   const loadingEl = document.getElementById("tags-loading");
@@ -157,9 +152,7 @@ function fetchTags() {
 }
 
 /**
- * Rendeert de tags of een offline-bericht in de HTML.
- * Als de service worker een speciale offline payload terugstuurt, tonen we een melding.
- */
+ * haalt de tags op of een offline-bericht in de HTML. Als de service worker een speciale offline payload terugstuurt, tonen we een melding.*/
 function renderTags(data) {
   const container = document.getElementById("tags-container");
   if (!container) return;

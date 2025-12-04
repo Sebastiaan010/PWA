@@ -37,7 +37,8 @@ function storeProjectsFromApiData(apiData) {
   return Promise.all(ops);
 }
 
-function buildProjectsResponseFromIndexedDB() {
+function buildProjectsResponseFromIndexedDB() { // Deze function haalt de data op uit de IndexedDB, gebeurt alleen wanneer je "offline" bent, anders gwn via de API over 
+// het netwerk, namelijk network first.
   return localforage.keys().then(function (keys) {
     const projectKeys = keys.filter(function (key) {
       return key.startsWith("project-");
@@ -130,7 +131,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // 2) Tags -> Network Only met offline fallback-JSON
+  // 2) Network Only strategie toegepast, Bij offline geeft gwn foutmelding.
   if (url.pathname.startsWith("/api/tags")) {
     event.respondWith(
       fetch(REMOTE_API_BASE + "/tags" + url.search).catch(function () {
@@ -149,7 +150,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Net work first strategie toegepast, deze laad eerst via het internet daarna uit de IndexedDB/
+  // Network first strategie toegepast, deze laad eerst via het internet daarna uit de IndexedDB/
   if (url.pathname.startsWith("/api/projects")) {
     event.respondWith(
       fetch(REMOTE_API_BASE + "/projects" + url.search)
@@ -165,17 +166,15 @@ self.addEventListener("fetch", function (event) {
               console.warn("[ServiceWorker] Kon projectdata niet parsen:", err);
             });
 
-          return networkResponse;
+          return networkResponse; // Online -> Data via api laden 
         })
         .catch(function () {
           console.log(
             "[ServiceWorker] NetworkFirst: netwerk faalt, haal projecten uit IndexedDB"
           );
-          return buildProjectsResponseFromIndexedDB();
+          return buildProjectsResponseFromIndexedDB(); // Offline -> Data via IndexedDB laden
         })
     );
     return;
   }
-
-  // 4) Alles anders gewoon door naar netwerk
 });
